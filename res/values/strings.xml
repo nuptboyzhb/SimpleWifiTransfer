@@ -3,6 +3,6 @@
 
     <string name="app_name">wififilemanager</string>
     <string name="action_settings">Settings</string>
-    <string name="hello_world">HTTP SERVER by Türkay Biliyor.</string>
+    <string name="start">Start</string>
 
 </resources>
