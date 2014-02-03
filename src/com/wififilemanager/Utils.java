@@ -3,9 +3,21 @@ package com.wififilemanager;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+
 import org.apache.http.conn.util.InetAddressUtils;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+
 public class Utils {
+
+	private Context mContext;
+	private int PORT = 1234;
+
+	public Utils(Context context) {
+		this.mContext = context;
+	}
 
 	/**
 	 * Convert byte array to hex string
@@ -112,6 +124,13 @@ public class Utils {
 		 */
 	}
 
+	public String getAdressSum() {
+		String str = null;
+
+		str = "http://" + getWifiApIpAddress() + ":" + PORT;
+		return str;
+	}
+
 	/**
 	 * Get IP address from first non-localhost interface
 	 * 
@@ -149,4 +168,64 @@ public class Utils {
 		return "";
 	}
 
+	public String getWifiApIpAddress() {
+		try {
+			String wifiipadress = "";
+			NetworkInfo wifiinfo = getNetworkInfo(mContext);
+			NetworkInfo mobileinfo = get3gNetworkInfo(mContext);
+			if (mobileinfo.getState() == NetworkInfo.State.CONNECTED
+					|| mobileinfo.getState() == NetworkInfo.State.CONNECTING) {
+				for (Enumeration<NetworkInterface> en = NetworkInterface
+						.getNetworkInterfaces(); en.hasMoreElements();) {
+					NetworkInterface intf = en.nextElement();
+					if (intf.getName().contains("wlan")) {
+						for (Enumeration<InetAddress> enumIpAddr = intf
+								.getInetAddresses(); enumIpAddr
+								.hasMoreElements();) {
+							InetAddress inetAddress = enumIpAddr.nextElement();
+							if (!inetAddress.isLoopbackAddress()
+									&& (inetAddress.getAddress().length == 4)) {
+								wifiipadress = inetAddress.getHostAddress();
+							}
+						}
+					} else
+						wifiipadress = Utils.getIPAddress(true);
+
+				}
+			} else if (wifiinfo.getState() == NetworkInfo.State.CONNECTED
+					|| wifiinfo.getState() == NetworkInfo.State.CONNECTING) {
+				for (Enumeration<NetworkInterface> en = NetworkInterface
+						.getNetworkInterfaces(); en.hasMoreElements();) {
+					NetworkInterface intf = en.nextElement();
+					if (intf.getName().contains("wlan")) {
+						for (Enumeration<InetAddress> enumIpAddr = intf
+								.getInetAddresses(); enumIpAddr
+								.hasMoreElements();) {
+							InetAddress inetAddress = enumIpAddr.nextElement();
+							if (!inetAddress.isLoopbackAddress()
+									&& (inetAddress.getAddress().length == 4)) {
+								wifiipadress = inetAddress.getHostAddress();
+							}
+						}
+					}
+				}
+			}
+
+			return wifiipadress;
+		} catch (SocketException ex) {
+		}
+		return null;
+	}
+
+	public static NetworkInfo getNetworkInfo(Context context) {
+		ConnectivityManager cm = (ConnectivityManager) context
+				.getSystemService(Context.CONNECTIVITY_SERVICE);
+		return cm.getNetworkInfo(1);
+	}
+
+	public static NetworkInfo get3gNetworkInfo(Context context) {
+		ConnectivityManager cm = (ConnectivityManager) context
+				.getSystemService(Context.CONNECTIVITY_SERVICE);
+		return cm.getNetworkInfo(0);
+	}
 }
