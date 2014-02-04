@@ -29,6 +29,8 @@ import android.util.Log;
 
 public class HttpServer {
 	public String test;
+	private int myTcpPort;
+	File myFileDir;
 
 	public Response serve(String uri, String method, Properties header,
 			Properties parms, Properties files) {
@@ -145,11 +147,13 @@ public class HttpServer {
 				try {
 					while (runThread)
 						new HTTPSession(ss.accept());
+					ss.close();
 				} catch (IOException ioe) {
 					Log.i("LOG_pawn", "http");
 				}
 			}
 		});
+
 		t.setDaemon(true);
 		t.start();
 	}
@@ -160,7 +164,7 @@ public class HttpServer {
 		this.runThread = false;
 	}
 
-	private String folder = null, status = null;
+	private String folder = null;
 
 	private class HTTPSession implements Runnable {
 		public HTTPSession(Socket s) {
@@ -582,7 +586,7 @@ public class HttpServer {
 						matchbyte = i;
 					matchcount++;
 					if (matchcount == boundary.length) {
-						matchbytes.addElement(new Integer(matchbyte));
+						matchbytes.addElement(Integer.valueOf(matchbyte));
 						matchcount = 0;
 						matchbyte = -1;
 					}
@@ -802,9 +806,6 @@ public class HttpServer {
 		}
 		return newUri;
 	}
-
-	private int myTcpPort;
-	File myFileDir;
 
 	// ==================================================
 	// File server code
