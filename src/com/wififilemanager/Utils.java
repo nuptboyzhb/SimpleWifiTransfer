@@ -12,11 +12,11 @@ import android.net.NetworkInfo;
 
 public class Utils {
 
-	private Context mContext;
-	private int PORT = 1234;
+	private static Context mContext;
+	private static int PORT = 1234;
 
 	public Utils(Context context) {
-		this.mContext = context;
+		mContext = context;
 	}
 
 	/**
@@ -114,7 +114,8 @@ public class Utils {
 				return buf.toString();
 			}
 		} catch (Exception ex) {
-		} // for now eat exceptions
+			// for now eat exceptions
+		}
 		return "";
 		/*
 		 * try { // this is so Linux hack return
@@ -124,7 +125,7 @@ public class Utils {
 		 */
 	}
 
-	public String getAdressSum() {
+	public static String getAdressSum() {
 		String str = null;
 
 		str = "http://" + getWifiApIpAddress() + ":" + PORT;
@@ -154,8 +155,8 @@ public class Utils {
 								return sAddr;
 						} else {
 							if (!isIPv4) {
-								int delim = sAddr.indexOf('%'); // drop ip6 port
-																// suffix
+								// drop ip6 port suffix
+								int delim = sAddr.indexOf('%');
 								return delim < 0 ? sAddr : sAddr.substring(0,
 										delim);
 							}
@@ -164,11 +165,12 @@ public class Utils {
 				}
 			}
 		} catch (Exception ex) {
-		} // for now eat exceptions
+			// for now eat exceptions
+		}
 		return "";
 	}
 
-	public String getWifiApIpAddress() {
+	public static String getWifiApIpAddress() {
 		try {
 			String wifiipadress = "";
 			NetworkInfo wifiinfo = getNetworkInfo(mContext);
