@@ -45,7 +45,7 @@ public class NotificationReceiver extends BroadcastReceiver {
 		NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(
 				context).setSmallIcon(R.drawable.ic_launcher)
 				.setContentTitle(context.getString(R.string.notif_title))
-				.setContentText("IP-Adress");
+				.setContentText(Utils.getAdressSum());
 
 		Intent resultIntent = new Intent(context, Filemanager.class);
 
