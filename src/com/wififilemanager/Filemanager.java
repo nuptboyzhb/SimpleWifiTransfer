@@ -16,8 +16,6 @@ public class Filemanager extends Activity {
 	static public final String ACTION_STARTED = "com.wififilemanager.HTTPSERVER_STARTED";
 	static public final String ACTION_STOPPED = "com.wififilemanager.HTTPSERVER_STOPPED";
 
-	private Utils mUtils;
-
 	private Button BtnStart;
 	private TextView Statustxt, Desctxt;
 	private HttpServer server;
@@ -28,7 +26,7 @@ public class Filemanager extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 
-		mUtils = new Utils(this);
+		new Utils(this);
 
 		StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
 				.permitAll().build();
@@ -44,30 +42,35 @@ public class Filemanager extends Activity {
 			@Override
 			public void onClick(View arg0) {
 				if (BtnStart.getText().equals("Start")) {
-
-					sendBroadcast(new Intent(ACTION_STARTED));
-
-					Statustxt.setText("http://" + mUtils.getWifiApIpAddress()
-							+ ":" + PORT);
-					Desctxt.setText("Enter the adress in your web browser");
-
-					try {
-						server = new HttpServer(PORT);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-
+					startServer();
 					BtnStart.setText("Stop");
 				} else {
-					sendBroadcast(new Intent(ACTION_STOPPED));
-
-					server.stop();
-					Statustxt.setText("");
-					Desctxt.setText("");
+					stopServer();
 					BtnStart.setText("Start");
 				}
 			}
 		});
+	}
+
+	private void startServer() {
+		sendBroadcast(new Intent(ACTION_STARTED));
+
+		Statustxt.setText(Utils.getAdressSum());
+		Desctxt.setText("Enter the adress in your web browser");
+
+		try {
+			server = new HttpServer(PORT);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void stopServer() {
+		sendBroadcast(new Intent(ACTION_STOPPED));
+
+		server.stop();
+		Statustxt.setText("");
+		Desctxt.setText("");
 	}
 
 	@Override

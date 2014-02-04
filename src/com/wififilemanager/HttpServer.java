@@ -30,13 +30,14 @@ import android.util.Log;
 public class HttpServer {
 	public String test;
 	private int myTcpPort;
-	File myFileDir;
+	private boolean runThread;
+	private String folder = null;
 
 	public Response serve(String uri, String method, Properties header,
 			Properties parms, Properties files) {
 		// System.out.println( method + " '" + uri + "' " );
 
-		Enumeration e = header.propertyNames();
+		Enumeration<?> e = header.propertyNames();
 		while (e.hasMoreElements()) {
 			String value = (String) e.nextElement();
 			System.out.println("  HDR: '" + value + "' = '"
@@ -158,13 +159,9 @@ public class HttpServer {
 		t.start();
 	}
 
-	private boolean runThread;
-
 	public void stop() {
 		this.runThread = false;
 	}
-
-	private String folder = null;
 
 	private class HTTPSession implements Runnable {
 		public HTTPSession(Socket s) {
@@ -862,7 +859,7 @@ public class HttpServer {
 					Hashtable<String, String> style;
 
 					style = new Hashtable<String, String>();
-					style.put("background", "#150517");
+					style.put("background", "#999999");
 					style.put("color", "#ffffff");
 					style.put("face", "verdana");
 					style.put("padding-top", "10px");
@@ -935,10 +932,6 @@ public class HttpServer {
 					msg += listfolders(files, f, uri);
 					msg += listfiles(files, f, uri);
 					msg += "</form>";
-					msg += "</b>";
-					msg += "<tr bgcolor=\"#A52A2A\" align=\"left\">";
-					msg += "<th colspan=\"4\"><font size=\"2\" face=\"verdana\" color=\"white\">";
-					msg += "Wifi File Manager for android V1.0 by Turkay Biliyor</th></tr>";
 					msg += "</table></div></div>";
 					res = new Response(HTTP_OK, MIME_HTML, msg);
 				} else {
@@ -1187,34 +1180,4 @@ public class HttpServer {
 				"E, d MMM yyyy HH:mm:ss 'GMT'", Locale.US);
 		gmtFrmt.setTimeZone(TimeZone.getTimeZone("GMT"));
 	}
-
-	/**
-	 * The distribution licence
-	 */
-	private static final String LICENCE = "Copyright (C) 2001,2005-2008 by Jarno Elonen <elonen@iki.fi>\n"
-			+ "Copyright (C) 2009 by Johan Wieslander <johan@wieslander.eu>\n"
-			+ "\n"
-			+ "Redistribution and use in source and binary forms, with or without\n"
-			+ "modification, are permitted provided that the following conditions\n"
-			+ "are met:\n"
-			+ "\n"
-			+ "Redistributions of source code must retain the above copyright notice,\n"
-			+ "this list of conditions and the following disclaimer. Redistributions in\n"
-			+ "binary form must reproduce the above copyright notice, this list of\n"
-			+ "conditions and the following disclaimer in the documentation and/or other\n"
-			+ "materials provided with the distribution. The name of the author may not\n"
-			+ "be used to endorse or promote products derived from this software without\n"
-			+ "specific prior written permission. \n"
-			+ " \n"
-			+ "THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR\n"
-			+ "IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES\n"
-			+ "OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.\n"
-			+ "IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,\n"
-			+ "INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT\n"
-			+ "NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,\n"
-			+ "DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY\n"
-			+ "THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n"
-			+ "(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\n"
-			+ "OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.";
-
 }
