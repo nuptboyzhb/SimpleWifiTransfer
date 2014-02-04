@@ -1,2 +1,2 @@
-add notification ip adress
-save state of app (running or not)
+run in background
+save state of app (check if running or not)
