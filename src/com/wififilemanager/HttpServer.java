@@ -48,126 +48,24 @@ import android.util.Log;
 
 public class HttpServer {
 	public String test;
-	private int myTcpPort;
+	private int TcpPort = 1234;
 	private boolean runThread;
 	private String folder = null;
-
-	public Response serve(String uri, String method, Properties header,
-			Properties parms, Properties files) {
-		// System.out.println( method + " '" + uri + "' " );
-
-		Enumeration<?> e = header.propertyNames();
-		while (e.hasMoreElements()) {
-			String value = (String) e.nextElement();
-			System.out.println("  HDR: '" + value + "' = '"
-					+ header.getProperty(value) + "'");
-		}
-		e = parms.propertyNames();
-		while (e.hasMoreElements()) {
-			String value = (String) e.nextElement();
-			System.out.println("  PRM: '" + value + "' = '"
-					+ parms.getProperty(value) + "'");
-		}
-
-		return serveFile(uri, header, new File("."), true);
-	}
+	private ServerSocket mServerSocket;
 
 	/**
-	 * HTTP response. Return one of these from serve().
+	 * Starts a HTTP server to given port. Throws an IOException if the socket
+	 * is already in use
 	 */
-	public class Response {
-		/**
-		 * Default constructor: response = HTTP_OK, data = mime = 'null'
-		 */
-		public Response() {
-			this.status = HTTP_OK;
-		}
-
-		/**
-		 * Basic constructor.
-		 */
-		public Response(String status, String mimeType, InputStream data) {
-			this.status = status;
-			this.mimeType = mimeType;
-			this.data = data;
-		}
-
-		/**
-		 * Convenience method that makes an InputStream out of given text.
-		 */
-		public Response(String status, String mimeType, String txt) {
-			this.status = status;
-			this.mimeType = mimeType;
-			this.data = new ByteArrayInputStream(txt.getBytes());
-		}
-
-		/**
-		 * Adds given line to the header.
-		 */
-		public void addHeader(String name, String value) {
-			header.put(name, value);
-		}
-
-		/**
-		 * HTTP status code after processing, e.g. "200 OK", HTTP_OK
-		 */
-		public String status;
-
-		/**
-		 * MIME type of content, e.g. "text/html"
-		 */
-		public String mimeType;
-
-		/**
-		 * Data of the response, may be null.
-		 */
-		public InputStream data;
-
-		/**
-		 * Headers for the HTTP response. Use addHeader() to add lines.
-		 */
-		public Properties header = new Properties();
-	}
-
-	/**
-	 * Some HTTP response status codes
-	 */
-	public static final String HTTP_OK = "200 OK",
-			HTTP_REDIRECT = "301 Moved Permanently",
-			HTTP_FORBIDDEN = "403 Forbidden", HTTP_NOTFOUND = "404 Not Found",
-			HTTP_BADREQUEST = "400 Bad Request",
-			HTTP_INTERNALERROR = "500 Internal Server Error",
-			HTTP_NOTIMPLEMENTED = "501 Not Implemented",
-			HTTP_PARTIALCONTENT = "206 Partial Content",
-			HTTP_RANGE_NOT_SATISFIABLE = "416 Requested Range Not Satisfiable";
-
-	/**
-	 * Common mime types for dynamic content
-	 */
-	public static final String MIME_PLAINTEXT = "text/plain",
-			MIME_HTML = "text/html",
-			MIME_DEFAULT_BINARY = "application/octet-stream";
-
-	// ==================================================
-	// Socket & server code
-	// ==================================================
-
-	/**
-	 * Starts a HTTP server to given port.
-	 * <p>
-	 * Throws an IOException if the socket is already in use
-	 */
-	public HttpServer(int port) throws IOException {
-		myTcpPort = port;
+	public HttpServer() throws IOException {
 		runThread = true;
-		final ServerSocket ss = new ServerSocket(myTcpPort);
-		// ss.setSoTimeout(1000);
+		mServerSocket = new ServerSocket(TcpPort);
+
 		Thread t = new Thread(new Runnable() {
 			public void run() {
 				try {
 					while (runThread)
-						new HTTPSession(ss.accept());
-					ss.close();
+						new HTTPSession(mServerSocket.accept());
 				} catch (IOException ioe) {
 					Log.i("LOG_pawn", "http");
 				}
@@ -180,6 +78,13 @@ public class HttpServer {
 
 	public void stop() {
 		this.runThread = false;
+
+		try {
+			if (mServerSocket != null)
+				mServerSocket.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private class HTTPSession implements Runnable {
@@ -638,7 +543,7 @@ public class HttpServer {
 						e.printStackTrace();
 					}
 					path = file.getAbsolutePath();
-				} catch (Exception e) { // Catch exception if any
+				} catch (Exception e) {
 					System.err.println("Error: " + e.getMessage());
 				}
 			}
@@ -1129,19 +1034,101 @@ public class HttpServer {
 		return msg;
 	}
 
-	private String SybExt(String filename) {
-		// Returns the correct Syabas Html extension
-		String extension = null;
-		int dot = filename.lastIndexOf('.');
-		if (dot >= 0) {
-			extension = (String) theNMTTypes.get(filename.substring(dot + 1)
-					.toLowerCase());
+	public Response serve(String uri, String method, Properties header,
+			Properties parms, Properties files) {
+		// System.out.println( method + " '" + uri + "' " );
+
+		Enumeration<?> e = header.propertyNames();
+		while (e.hasMoreElements()) {
+			String value = (String) e.nextElement();
+			System.out.println("  HDR: '" + value + "' = '"
+					+ header.getProperty(value) + "'");
 		}
-		if (extension == null) {
-			extension = "";
+		e = parms.propertyNames();
+		while (e.hasMoreElements()) {
+			String value = (String) e.nextElement();
+			System.out.println("  PRM: '" + value + "' = '"
+					+ parms.getProperty(value) + "'");
 		}
-		return extension;
+
+		return serveFile(uri, header, new File("."), true);
 	}
+
+	/**
+	 * HTTP response. Return one of these from serve().
+	 */
+	public class Response {
+		/**
+		 * Default constructor: response = HTTP_OK, data = mime = 'null'
+		 */
+		public Response() {
+			this.status = HTTP_OK;
+		}
+
+		/**
+		 * Basic constructor.
+		 */
+		public Response(String status, String mimeType, InputStream data) {
+			this.status = status;
+			this.mimeType = mimeType;
+			this.data = data;
+		}
+
+		/**
+		 * Convenience method that makes an InputStream out of given text.
+		 */
+		public Response(String status, String mimeType, String txt) {
+			this.status = status;
+			this.mimeType = mimeType;
+			this.data = new ByteArrayInputStream(txt.getBytes());
+		}
+
+		/**
+		 * Adds given line to the header.
+		 */
+		public void addHeader(String name, String value) {
+			header.put(name, value);
+		}
+
+		/**
+		 * HTTP status code after processing, e.g. "200 OK", HTTP_OK
+		 */
+		public String status;
+
+		/**
+		 * MIME type of content, e.g. "text/html"
+		 */
+		public String mimeType;
+
+		/**
+		 * Data of the response, may be null.
+		 */
+		public InputStream data;
+
+		/**
+		 * Headers for the HTTP response. Use addHeader() to add lines.
+		 */
+		public Properties header = new Properties();
+	}
+
+	/**
+	 * Some HTTP response status codes
+	 */
+	public static final String HTTP_OK = "200 OK",
+			HTTP_REDIRECT = "301 Moved Permanently",
+			HTTP_FORBIDDEN = "403 Forbidden", HTTP_NOTFOUND = "404 Not Found",
+			HTTP_BADREQUEST = "400 Bad Request",
+			HTTP_INTERNALERROR = "500 Internal Server Error",
+			HTTP_NOTIMPLEMENTED = "501 Not Implemented",
+			HTTP_PARTIALCONTENT = "206 Partial Content",
+			HTTP_RANGE_NOT_SATISFIABLE = "416 Requested Range Not Satisfiable";
+
+	/**
+	 * Common mime types for dynamic content
+	 */
+	public static final String MIME_PLAINTEXT = "text/plain",
+			MIME_HTML = "text/html",
+			MIME_DEFAULT_BINARY = "application/octet-stream";
 
 	/**
 	 * Hashtable mapping (String)FILENAME_EXTENSION -> (String)MIME_TYPE

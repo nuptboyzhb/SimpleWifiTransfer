@@ -37,7 +37,6 @@ public class Filemanager extends Activity {
 	private Button BtnStart;
 	private TextView Statustxt, Desctxt;
 	private HttpServer server;
-	private int PORT = 1234;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -77,7 +76,7 @@ public class Filemanager extends Activity {
 		Desctxt.setText("Enter the adress in your web browser");
 
 		try {
-			server = new HttpServer(PORT);
+			server = new HttpServer();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
