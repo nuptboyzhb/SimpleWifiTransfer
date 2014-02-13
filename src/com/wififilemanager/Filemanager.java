@@ -20,13 +20,16 @@
 package com.wififilemanager;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.UnknownHostException;
 
 import android.os.Bundle;
-import android.os.StrictMode;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
+import android.content.IntentFilter;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -36,9 +39,11 @@ public class Filemanager extends Activity {
 	static public final String ACTION_STARTED = "com.wififilemanager.HTTPSERVER_STARTED";
 	static public final String ACTION_STOPPED = "com.wififilemanager.HTTPSERVER_STOPPED";
 
+	private ServerSocket mServerSocket;
+	private Thread serverThread;
+
 	private int TcpPort = 1234;
 	private boolean runThread;
-	private ServerSocket mServerSocket;
 
 	private Button BtnStart;
 	private TextView Statustxt, Desctxt;
@@ -50,76 +55,67 @@ public class Filemanager extends Activity {
 
 		new Utils(this);
 
-		StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
-				.permitAll().build();
-		StrictMode.setThreadPolicy(policy);
-
 		Statustxt = (TextView) findViewById(R.id.txt_status);
 		Desctxt = (TextView) findViewById(R.id.txt_desc);
 		BtnStart = (Button) findViewById(R.id.btn_start);
-		BtnStart.setText("Start");
-		Statustxt.setText("");
-
+		BtnStart.setText(R.string.start);
 		BtnStart.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
 				if (BtnStart.getText().equals("Start")) {
-					startServer();
-					BtnStart.setText("Stop");
+					try {
+						newThread();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				} else {
 					stopServer();
-					BtnStart.setText("Start");
 				}
 			}
 		});
+
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(ACTION_STARTED);
+		filter.addAction(ACTION_STOPPED);
+		registerReceiver(mFsActionsReceiver, filter);
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
 	}
 
 	@Override
 	public void onDestroy() {
-		this.stop();
-	}
-
-	private void startServer() {
-		sendBroadcast(new Intent(ACTION_STARTED));
-
-		Statustxt.setText(Utils.getAdressSum());
-		Desctxt.setText("Enter the adress in your web browser");
-
-		try {
-			newThread();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		this.stopServer();
+		unregisterReceiver(mFsActionsReceiver);
+		super.onDestroy();
 	}
 
 	private void newThread() throws IOException {
 		runThread = true;
 		mServerSocket = new ServerSocket(TcpPort);
 
-		Thread t = new Thread(new Runnable() {
+		serverThread = new Thread(new Runnable() {
 			public void run() {
 				try {
-					while (runThread)
+					while (runThread) {
+						sendBroadcast(new Intent(ACTION_STARTED));
 						new HTTPSession(mServerSocket.accept());
+					}
 				} catch (IOException ioe) {
-					Log.i("LOG_pawn", "http");
+					stopServer();
 				}
 			}
 		});
 
-		t.setDaemon(true);
-		t.start();
+		serverThread.setDaemon(true);
+		serverThread.start();
 	}
 
-	private void stopServer() {
+	public void stopServer() {
 		sendBroadcast(new Intent(ACTION_STOPPED));
 
-		this.stop();
-		Statustxt.setText("");
-		Desctxt.setText("");
-	}
-
-	public void stop() {
 		this.runThread = false;
 
 		try {
@@ -129,4 +125,40 @@ public class Filemanager extends Activity {
 			e.printStackTrace();
 		}
 	}
+
+	/**
+	 * This receiver will check HTTPServer.ACTION* messages and will update the
+	 * button, running_state, if the server is running and will also display at
+	 * what url the server is running.
+	 */
+	BroadcastReceiver mFsActionsReceiver = new BroadcastReceiver() {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (intent.getAction().equals(ACTION_STARTED)) {
+				Statustxt.setText(Utils.getAdressSum());
+				Desctxt.setText(R.string.enterip);
+				BtnStart.setText(R.string.stop);
+
+				// Fill in the HTTP server address
+				InetAddress address = null;
+
+				try {
+					address = InetAddress.getByName(Utils.getIPAddress(true));
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+				}
+
+				if (address == null) {
+					Statustxt.setText(R.string.urlerror);
+					return;
+				}
+
+			} else if (intent.getAction().equals(ACTION_STOPPED)) {
+				BtnStart.setText(R.string.start);
+				Statustxt.setText("");
+				Desctxt.setText("");
+			}
+		}
+	};
 }

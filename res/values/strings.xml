@@ -4,9 +4,9 @@
     <string name="app_name">Wifi-Filemanager</string>
     <string name="action_settings">Settings</string>
     <string name="start">Start</string>
-    <!-- Notification -->
-    <string name="notif_server_starting">Starting at %s</string>
+    <string name="stop">Stop</string>
+    <string name="urlerror">Cannot retrieve URL</string>
+    <string name="enterip">Enter the IP-address in your Browser</string>
     <string name="notif_title">HTTP Server is running</string>
-    <string name="notif_text">at %s</string>
 
 </resources>
