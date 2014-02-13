@@ -20,11 +20,13 @@
 package com.wififilemanager;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.app.Activity;
 import android.content.Intent;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -34,9 +36,12 @@ public class Filemanager extends Activity {
 	static public final String ACTION_STARTED = "com.wififilemanager.HTTPSERVER_STARTED";
 	static public final String ACTION_STOPPED = "com.wififilemanager.HTTPSERVER_STOPPED";
 
+	private int TcpPort = 1234;
+	private boolean runThread;
+	private ServerSocket mServerSocket;
+
 	private Button BtnStart;
 	private TextView Statustxt, Desctxt;
-	private HttpServer server;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +74,11 @@ public class Filemanager extends Activity {
 		});
 	}
 
+	@Override
+	public void onDestroy() {
+		this.stop();
+	}
+
 	private void startServer() {
 		sendBroadcast(new Intent(ACTION_STARTED));
 
@@ -76,22 +86,47 @@ public class Filemanager extends Activity {
 		Desctxt.setText("Enter the adress in your web browser");
 
 		try {
-			server = new HttpServer();
+			newThread();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
+	private void newThread() throws IOException {
+		runThread = true;
+		mServerSocket = new ServerSocket(TcpPort);
+
+		Thread t = new Thread(new Runnable() {
+			public void run() {
+				try {
+					while (runThread)
+						new HTTPSession(mServerSocket.accept());
+				} catch (IOException ioe) {
+					Log.i("LOG_pawn", "http");
+				}
+			}
+		});
+
+		t.setDaemon(true);
+		t.start();
+	}
+
 	private void stopServer() {
 		sendBroadcast(new Intent(ACTION_STOPPED));
 
-		server.stop();
+		this.stop();
 		Statustxt.setText("");
 		Desctxt.setText("");
 	}
 
-	@Override
-	protected void onResume() {
-		super.onResume();
+	public void stop() {
+		this.runThread = false;
+
+		try {
+			if (mServerSocket != null)
+				mServerSocket.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }
